@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* The palette lives here so a contributor restyling the app edits one file.
+   Warm and paper-like rather than the usual app blue: this is a record of
+   something done slowly over years, and it should not look like a dashboard. */
+@theme {
+  --color-ink: #1c1a16;
+  --color-ink-soft: #6b6353;
+  --color-parchment: #faf7f0;
+  --color-card: #ffffff;
+  --color-rule: #e6e0d2;
+
+  --color-brand: #7a5c1e;
+  --color-brand-soft: #f3ecdb;
+
+  --color-solid: #2f6b3d;
+  --color-shaky: #9a6b12;
+  --color-lost: #96302f;
+}
+
+html,
+body {
+  background: var(--color-parchment);
+  color: var(--color-ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  html,
+  body {
+    background: #15130f;
+    color: #f2ece0;
+  }
+}
