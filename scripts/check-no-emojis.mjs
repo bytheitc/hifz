@@ -39,8 +39,7 @@ const IGNORED_FILES = new Set([
   ".DS_Store"
 ]);
 
-const scriptPath = fileURLToPath(import.meta.url);
-const rootDir = resolve(scriptPath, "../..");
+const rootDir = resolve(fileURLToPath(import.meta.url), "../..");
 
 let totalFiles = 0;
 const violations = [];
@@ -52,7 +51,10 @@ function scan(dir) {
     if (IGNORED_FILES.has(entry.name)) continue;
 
     const fullPath = join(dir, entry.name);
-    if (fullPath === scriptPath) continue;
+    // No self-exemption: the regex is written with Unicode property
+    // escapes, not literal characters, so this file can hold itself to
+    // the same rule. It previously skipped itself, which is exactly how
+    // its own output came to contain a tick and a cross.
 
     if (entry.isDirectory()) {
       scan(fullPath);
@@ -82,13 +84,13 @@ function scan(dir) {
 scan(rootDir);
 
 if (violations.length > 0) {
-  console.error(`✗ Emoji check failed: ${violations.length} emoji(s) found in repository.`);
+  console.error(`FAIL  Emoji check failed: ${violations.length} emoji(s) found in repository.`);
   console.error(`  Emojis are strictly prohibited across this codebase.\n`);
   for (const v of violations) {
     console.error(`  ${v.file}:${v.line} -> "${v.char}" in: ${v.snippet}`);
   }
   process.exit(1);
 } else {
-  console.log(`✓ No emojis found across ${totalFiles} checked files.`);
+  console.log(`OK    No emojis found across ${totalFiles} checked files.`);
   process.exit(0);
 }

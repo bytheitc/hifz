@@ -2,6 +2,11 @@
 
 Drafted starter tasks. Comment on the matching GitHub issue to claim one.
 
+> **These are now live issues.** Each task below has an issue at
+> <https://github.com/bytheitc/hifz/issues> - claim one by commenting there rather
+> than here. This file is kept as the written-out version; if the two ever
+> disagree, the issue tracker is right.
+
 Difficulty: [Easy] gentle · [Medium] straightforward code · [Hard] needs some thought
 
 ---
