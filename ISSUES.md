@@ -2,11 +2,11 @@
 
 Drafted starter tasks. Comment on the matching GitHub issue to claim one.
 
-Difficulty: 🟢 gentle · 🟡 straightforward code · 🔴 needs some thought
+Difficulty: [Easy] gentle · [Medium] straightforward code · [Hard] needs some thought
 
 ---
 
-### 1. 🟢 Add juz boundaries
+### 1. [Easy] Add juz boundaries
 
 **Problem.** Progress is reported in ayahs and surahs. Almost everyone memorising
 thinks in **juz** — "I'm on juz 29" is the sentence people actually say — and the app
@@ -21,7 +21,7 @@ there are exactly 30 and that they are strictly increasing.
 
 ---
 
-### 2. 🟢 Export and import a trail as a file
+### 2. [Easy] Export and import a trail as a file
 
 **Problem.** Everything lives in `localStorage`, which is the right call for privacy
 and the wrong one if you change phone or clear your browser. Years of records vanish.
@@ -36,7 +36,7 @@ not a trail, and it should say so rather than wipe their data.
 
 ---
 
-### 3. 🟡 A revision streak
+### 3. [Medium] A revision streak
 
 **Problem.** The app shows what is due but nothing about whether you have been
 turning up. For a daily habit, that is most of the motivation.
@@ -50,7 +50,7 @@ should not extend one either.
 
 ---
 
-### 4. 🟡 Make the interval table configurable
+### 4. [Medium] Make the interval table configurable
 
 **Problem.** `REVIEW_INTERVALS_DAYS` is a constant. Some people revise far more
 intensively than it assumes, particularly during Ramadan, and have no way to say so.
@@ -64,7 +64,7 @@ shortens to four entries, and test that case.
 
 ---
 
-### 5. 🟡 Split and merge portions from the interface
+### 5. [Medium] Split and merge portions from the interface
 
 **Problem.** `mergePortions` handles overlap when counting, but the stored list still
 shows "Al-Baqarah 1–20" and "Al-Baqarah 21–40" as two entries with two schedules. A
@@ -78,7 +78,7 @@ portions with different histories merge.
 
 ---
 
-### 6. 🔴 A "how long until I finish" projection
+### 6. [Hard] A "how long until I finish" projection
 
 **Problem.** The hardest question for anyone memorising is whether their current pace
 is realistic. We have the data to answer it and do not.
@@ -91,7 +91,7 @@ fewer than a few weeks of history rather than printing a confident wrong number.
 
 ---
 
-### 7. 🟡 Arabic surah names in the interface
+### 7. [Medium] Arabic surah names in the interface
 
 **Problem.** `data/quran-meta.json` carries `arabicName` for all 114 surahs and the
 interface never shows it.
@@ -103,7 +103,7 @@ and `lang="ar"`. Check it does not break the layout of the due list at phone wid
 
 ---
 
-### 8. 🟢 Keyboard-only review
+### 8. [Easy] Keyboard-only review
 
 **Problem.** Grading a long due list means moving the mouse between three small
 buttons for every row. Someone doing twenty portions a day will feel this.
@@ -116,7 +116,7 @@ typing in the add-portion form.
 
 ---
 
-### 9. 🟡 Make it installable and work offline
+### 9. [Medium] Make it installable and work offline
 
 **Problem.** The app is built to need no network and is delivered over one.
 
@@ -127,7 +127,7 @@ screen and opens with no connection.
 
 ---
 
-### 10. 🔴 Sort out what a "lapse" should really cost
+### 10. [Hard] Sort out what a "lapse" should really cost
 
 **Problem.** A lost portion currently drops straight to box 0 — a one-day interval.
 That is deliberate (see the note at the top of `lib/srs.ts`) but it is a guess, and

@@ -10,7 +10,8 @@
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:emojis": "node scripts/check-no-emojis.mjs"
   },
   "dependencies": {
     "next": "15.5.4",
