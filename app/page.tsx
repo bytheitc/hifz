@@ -12,6 +12,7 @@ import {
   upcomingLoad,
 } from "@/lib/srs";
 import { computeProgress, needsRelearning, suggestNext } from "@/lib/progress";
+import { focusAfterGrade, gradeForKeyPress } from "@/lib/keyboard";
 import { loadPortions, savePortions } from "@/lib/storage";
 
 /** A small starting trail, so the first load shows what the app is for
@@ -63,6 +64,20 @@ export default function Home() {
     );
   }
 
+  function gradeFromKey(event: React.KeyboardEvent<HTMLLIElement>, portion: TrackedPortion) {
+    const value = gradeForKeyPress(event);
+    if (!value) return;
+    event.preventDefault();
+    // A graded row leaves the due list, which would drop focus to the top of
+    // the page. Moving it to a neighbour first lets one hand grade the whole list.
+    const row = event.currentTarget;
+    const rows = Array.from(row.parentElement?.children ?? []);
+    const focusIndex = focusAfterGrade(rows.indexOf(row), rows.length);
+    grade(portion, value);
+    const target = focusIndex === null ? null : rows[focusIndex];
+    if (target instanceof HTMLElement) target.focus();
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <header className="mb-8">
@@ -107,6 +122,12 @@ export default function Home() {
         <h2 className="mb-3 text-sm font-semibold">
           Due today{due.length > 0 && ` · ${due.length}`}
         </h2>
+        {due.length > 0 && (
+          <p className="mb-3 text-xs text-[var(--color-ink-soft)]">
+            Tab to a row, then press <kbd className="font-mono">1</kbd> solid,{" "}
+            <kbd className="font-mono">2</kbd> shaky or <kbd className="font-mono">3</kbd> lost.
+          </p>
+        )}
         {due.length === 0 ? (
           <p className="rounded-lg border border-[var(--color-rule)] p-4 text-sm text-[var(--color-ink-soft)]">
             Nothing due. {portions.length === 0 && "Add a portion below to begin."}
@@ -116,7 +137,9 @@ export default function Home() {
             {due.map((portion) => (
               <li
                 key={portion.id}
-                className="flex flex-wrap items-center gap-3 rounded-lg border border-[var(--color-rule)] bg-[var(--color-card)] p-3 dark:bg-white/5"
+                tabIndex={0}
+                onKeyDown={(event) => gradeFromKey(event, portion)}
+                className="flex flex-wrap items-center gap-3 rounded-lg border border-[var(--color-rule)] bg-[var(--color-card)] p-3 focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:outline-none dark:bg-white/5"
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{describePortion(portion)}</p>
