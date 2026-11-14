@@ -16,6 +16,12 @@
   --color-solid: #2f6b3d;
   --color-shaky: #9a6b12;
   --color-lost: #96302f;
+
+  /* The browser's built-in easings are too weak to read as deliberate.
+     These are the two the landing page uses; nothing in the app itself
+     animates, and that is on purpose. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 html,
@@ -29,5 +35,165 @@ body {
   body {
     background: #15130f;
     color: #f2ece0;
+  }
+}
+
+/* --- Phone behaviour -------------------------------------------------- */
+
+/* Tapping a grade button flashed a grey box over it on Android and in iOS
+   webviews. The buttons have their own :active state, so the browser's is
+   noise on top of it. */
+button,
+a,
+select,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hover styles that stick after a tap are the single most common reason a web
+   app feels wrong on a phone: the row stays highlighted until you touch
+   something else. Only apply them where a real pointer exists. */
+@media (hover: none) {
+  .hover\:underline:hover {
+    text-decoration: none;
+  }
+}
+
+/* Dragging the page down inside the due list should not trigger the browser's
+   pull-to-refresh and throw away a half-finished revision session. */
+html {
+  overscroll-behavior-y: none;
+}
+
+/* Long-pressing a grade button selected its label and raised the copy/define
+   bubble instead of registering as a press. Text the student might actually
+   want to copy is left alone. */
+button {
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Someone revising at 5am should not be shown a smooth 500ms bar animation
+   they did not ask for, and some people get motion sick from them. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* --- The opening mushaf ------------------------------------------------
+
+   The landing page hero, and the only animation in the project. It is here
+   rather than in the app because the app is used every day and the landing
+   page is seen once: motion that would be an irritation on the fiftieth
+   viewing is what carries the first.
+
+   Everything below animates `transform` and `opacity` only, in CSS rather
+   than JavaScript, so it stays smooth while the rest of the page is still
+   loading.
+
+   The open book is the base state and the animation runs *from* closed. A
+   reader with reduced motion, or with animations disabled entirely, gets an
+   open mushaf rather than one stuck shut - the content never depends on the
+   animation having run.
+
+   There is no Qur'anic text in any of this. The lines are abstract. Setting
+   actual revelation in motion as page decoration is not something this
+   project will do, and a suggestion of text carries the idea perfectly
+   well. */
+
+.mushaf {
+  perspective: 1600px;
+}
+
+.mushaf-spread {
+  transform-style: preserve-3d;
+}
+
+.mushaf-page {
+  backface-visibility: hidden;
+}
+
+.mushaf-page--left {
+  transform-origin: right center;
+  transform: rotateY(8deg);
+  animation: mushaf-open-left 1200ms var(--ease-out) both;
+}
+
+.mushaf-page--right {
+  transform-origin: left center;
+  transform: rotateY(-8deg);
+  animation: mushaf-open-right 1200ms var(--ease-out) both;
+}
+
+@keyframes mushaf-open-left {
+  from {
+    transform: rotateY(84deg);
+  }
+  to {
+    transform: rotateY(8deg);
+  }
+}
+
+@keyframes mushaf-open-right {
+  from {
+    transform: rotateY(-84deg);
+  }
+  to {
+    transform: rotateY(-8deg);
+  }
+}
+
+/* The lines fill from the right, because that is the direction the script
+   they stand in for is read in. */
+.mushaf-line {
+  transform-origin: right center;
+  animation: mushaf-line 560ms var(--ease-out) both;
+  animation-delay: calc(620ms + var(--line) * 55ms);
+}
+
+@keyframes mushaf-line {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+.mushaf-rise {
+  animation: mushaf-rise 900ms var(--ease-out) both;
+  animation-delay: var(--rise, 0ms);
+}
+
+@keyframes mushaf-rise {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Reduced motion: the book is simply already open, and the words are simply
+   already there. Gentler, not absent - and crucially not delayed, since the
+   blanket rule above collapses the duration but leaves the delay standing. */
+@media (prefers-reduced-motion: reduce) {
+  .mushaf-page--left,
+  .mushaf-page--right,
+  .mushaf-line,
+  .mushaf-rise {
+    animation-delay: 0ms !important;
   }
 }
