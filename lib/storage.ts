@@ -1,14 +1,22 @@
 import type { TrackedPortion } from "./srs";
 
 /**
+ * The previous single-trail store, kept for reading only.
+ *
+ * `lib/store.ts` holds what the app writes now. This module is still here
+ * because people have trails saved under its key, and it is what migration
+ * reads them from. Nothing writes here any more, and nothing deletes the key:
+ * someone who updates, dislikes the change and reinstalls the older version
+ * must still find their hifz.
+ *
  * Everything is kept in the browser.
  *
  * What a person has and has not memorised of the Qur'an is about as personal
  * as data gets, and there is no feature in this app that a server would make
  * possible. So there is no account, no sync and nothing to breach — and, as a
  * side effect, a contributor can run the whole project with `pnpm dev` and no
- * credentials. Export to a file (see ISSUES.md) is the right answer to
- * "but what if I change phone", not a backend.
+ * credentials. The answer to "but what if I change phone" is a file the
+ * person holds, in `lib/backup.ts`, not a backend.
  */
 
 const STORAGE_KEY = "hifz-trail:portions:v1";

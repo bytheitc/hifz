@@ -26,7 +26,7 @@ there are exactly 30 and that they are strictly increasing.
 
 ---
 
-### 2. [Easy] Export and import a trail as a file
+### 2. [Easy] Export and import a trail as a file - done
 
 **Problem.** Everything lives in `localStorage`, which is the right call for privacy
 and the wrong one if you change phone or clear your browser. Years of records vanish.
@@ -38,6 +38,13 @@ in. Importing should merge rather than replace, and say how many portions it add
 
 **Watch out for.** Validate on import — someone will eventually open a file that is
 not a trail, and it should say so rather than wipe their data.
+
+**Status.** Implemented in `lib/backup.ts` and `components/BackupControls.tsx`.
+Import only ever adds, so a wrong file cannot undo revision work. Portions are
+matched by surah and ayah range rather than by id, because the same portion
+carries different ids on different devices. A range the trail already has is
+skipped; a file holding the same range more than once is restored in full,
+since the add form permits that and a backup must return what it stored.
 
 ---
 
@@ -108,7 +115,7 @@ and `lang="ar"`. Check it does not break the layout of the due list at phone wid
 
 ---
 
-### 8. [Easy] Keyboard-only review
+### 8. [Easy] Keyboard-only review - done
 
 **Problem.** Grading a long due list means moving the mouse between three small
 buttons for every row. Someone doing twenty portions a day will feel this.
@@ -118,6 +125,11 @@ with visible focus and a key legend. Make sure it does not fire while someone is
 typing in the add-portion form.
 
 **Files.** `app/page.tsx`, a new component.
+
+**Status.** Implemented: 1/2/3 grade the top of the queue, U undoes the last
+grade, the legend sits beside the "Due today" heading, and the handler ignores
+keys typed into the add-portion form. What is still open is per-row focus -
+the keys act on the top of the queue rather than on a focused row.
 
 ---
 
