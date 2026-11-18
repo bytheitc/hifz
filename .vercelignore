@@ -1,0 +1,5 @@
+# The web app deploys from this repository's root. api/ is a separate Express service (its own
+# package.json and vercel.json); left in, Vercel turns every file in a root-level api/ folder into a
+# serverless function of the web deployment, which went past the Hobby plan's limit of 12 and failed
+# every deploy. The web never imports from api/.
+/api
