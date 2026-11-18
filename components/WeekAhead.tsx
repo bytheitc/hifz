@@ -23,11 +23,9 @@ export function WeekAhead({
   return (
     <section
       aria-label="The next seven days"
-      className="rounded-2xl border border-[var(--color-rule)] bg-[var(--color-card)] p-4 sm:p-5 dark:border-white/10 dark:bg-white/5"
+      className="card p-5"
     >
-      <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-ink-soft)] dark:text-white/55">
-        The next seven days
-      </h2>
+      <h2 className="eyebrow">The next seven days</h2>
 
       <ul className="mt-3 flex items-end gap-1.5">
         {load.map((day, index) => {
@@ -40,9 +38,9 @@ export function WeekAhead({
                   style={{
                     height: `${Math.max(day.ayahs > 0 ? 6 : 2, (day.ayahs / peak) * 100)}%`,
                     backgroundColor: isPeak
-                      ? "var(--color-lost)"
+                      ? "var(--color-dawn)"
                       : "var(--color-brand)",
-                    opacity: day.ayahs === 0 ? 0.25 : 1,
+                    opacity: day.ayahs === 0 ? 0.2 : isPeak ? 1 : 0.8,
                   }}
                   title={`${day.ayahs} ayahs across ${day.portions} portion${day.portions === 1 ? "" : "s"}`}
                 />
@@ -57,8 +55,8 @@ export function WeekAhead({
       </ul>
 
       <p className="mt-2.5 text-xs text-[var(--color-ink-soft)] dark:text-white/55">
-        Check this before taking on something new. The point is to see a heavy day
-        coming while you can still do something about it.
+        Check this before taking on something new: a heavy day is easier to
+        handle when you can see it coming.
       </p>
     </section>
   );

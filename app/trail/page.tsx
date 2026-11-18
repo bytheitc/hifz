@@ -42,6 +42,10 @@ import { TrailList } from "@/components/TrailList";
 import { BackupControls } from "@/components/BackupControls";
 import { StudentRoster } from "@/components/StudentRoster";
 import { TeacherNotes, type TeacherNote } from "@/components/TeacherNotes";
+import { AppHeader } from "@/components/app/AppHeader";
+import { HelpCenter, type HelpTopic } from "@/components/app/HelpCenter";
+import { Onboarding, hasOnboarded } from "@/components/app/Onboarding";
+import { CircleHelp, Plus, Sparkles } from "lucide-react";
 
 /** A small starting trail, so the first load shows what the app is for
  *  instead of an empty page with a form on it. Cleared with one button. */
@@ -78,6 +82,9 @@ export default function Home() {
   const [syncSaid, setSyncSaid] = useState<string | null>(null);
   const [syncFailed, setSyncFailed] = useState(false);
   const queueRef = useRef<HTMLDivElement>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [helpTopic, setHelpTopic] = useState<HelpTopic>("start");
+  const [tourOpen, setTourOpen] = useState(false);
 
   useEffect(() => {
     const date = toDateOnly(new Date());
@@ -101,6 +108,8 @@ export default function Home() {
 
     setState(seeded);
     setToday(date);
+    // The welcome tour, once, on a first visit.
+    if (!hasOnboarded()) setTourOpen(true);
 
     if (!accountsConfigured()) {
       setAccount({ kind: "not-configured" });
@@ -372,210 +381,218 @@ export default function Home() {
     setLastGrade(null);
   }
 
+  const openHelp = (topic: HelpTopic) => {
+    setHelpTopic(topic);
+    setHelpOpen(true);
+  };
+  const isSample =
+    !teaching &&
+    portions.length > 0 &&
+    portions.every((p) => ["s1", "s2", "s3", "s4"].includes(p.id));
+  const dateLabel = new Date(`${today}T12:00:00`).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  const sectionTitle = "eyebrow";
+
   return (
-    <main className="mx-auto min-h-dvh w-full max-w-5xl px-4 pb-28 pt-6 sm:px-6 sm:pb-12 sm:pt-10">
-      <header className="mb-5 flex items-baseline justify-between gap-3">
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Hifz Trail</h1>
-        <div className="flex items-center gap-3">
-          {/* Not written out here on purpose. The sentence comes from the
-              account layer, so that the day a trail starts syncing it cannot
-              be left behind claiming something that has stopped being true. */}
-          <p className="hidden text-right text-[11px] text-[var(--color-ink-soft)] sm:block dark:text-white/50">
-            {describeWhereDataLives(account)}
-          </p>
-          <div
-            role="group"
-            aria-label="Mode"
-            className="flex rounded-lg border border-[var(--color-rule)] p-0.5 dark:border-white/15"
-          >
-            {(["solo", "teacher"] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setMode(mode)}
-                aria-pressed={state.mode === mode}
-                className={`rounded-md px-2.5 py-1 text-[11px] ${
-                  state.mode === mode
-                    ? "bg-[var(--color-brand)] text-white"
-                    : "text-[var(--color-ink-soft)] dark:text-white/55"
-                }`}
-              >
-                {mode === "solo" ? "Just me" : "Teaching"}
-              </button>
-            ))}
+    <div className="min-h-dvh bg-[var(--color-wash)]">
+      <AppHeader mode={state.mode} onMode={setMode} account={account} onHelp={() => openHelp("start")} />
+
+      <main className="mx-auto w-full max-w-6xl px-4 pb-32 pt-6 sm:px-6 sm:pb-16 sm:pt-8">
+        {isSample && (
+          <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--color-brand)]/25 bg-[var(--color-brand-soft)] px-4 py-3 text-sm">
+            <Sparkles className="size-4 shrink-0 text-[var(--color-brand)]" />
+            <p className="min-w-0 flex-1">
+              <strong>This is a sample trail</strong> so you can see how Hifz Trail works. Clear it when you are ready to add your own.
+            </p>
+            <button
+              type="button"
+              className="btn btn-sm btn-primary"
+              onClick={() => setState((prev) => (prev && activeId ? replacePortions(prev, activeId, []) : prev))}
+            >
+              Start my own trail
+            </button>
           </div>
-        </div>
-      </header>
+        )}
 
-      {teaching && (
-        <div className="mb-5">
-          <StudentRoster
-            students={roster}
-            activeId={activeId ?? ""}
-            dueCounts={dueCounts}
-            onSelect={setChosenStudent}
-            // Selecting the new student happens out here, not inside a
-            // setState updater. An updater has to be a pure function of the
-            // previous state - React calls it more than once in development,
-            // and a setState buried in one lands unreliably. That is exactly
-            // what went wrong first: adding a second student left the first
-            // one selected, so a teacher adding someone mid-session would
-            // have started grading the wrong child.
-            onAdd={(name) => {
-              const { state: next, student } = addStudent(state, name, today);
-              setState(next);
-              setChosenStudent(student.id);
-            }}
-          />
-        </div>
-      )}
+        {teaching && (
+          <div className="card mb-5 p-4 sm:p-5">
+            <StudentRoster
+              students={roster}
+              activeId={activeId ?? ""}
+              dueCounts={dueCounts}
+              onSelect={setChosenStudent}
+              // Selecting the new student happens out here, not inside a
+              // setState updater: an updater must be pure, and React calls it
+              // twice in development, so a setState inside one lands unreliably.
+              onAdd={(name) => {
+                const { state: next, student } = addStudent(state, name, today);
+                setState(next);
+                setChosenStudent(student.id);
+              }}
+            />
+          </div>
+        )}
 
-      {teaching && !activeId ? (
-        <p className="rounded-2xl border border-dashed border-[var(--color-rule)] p-5 text-sm text-[var(--color-ink-soft)] dark:border-white/15 dark:text-white/55">
-          Add a student to begin. What you record here is your assessment, and
-          it takes precedence over their own for the day.
-        </p>
-      ) : (
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6">
-          <div className="space-y-5">
-            {teaching && activeStudent ? (
-              <div className="rounded-2xl border border-[var(--color-rule)] px-4 py-3 dark:border-white/10">
-                <p className="text-sm font-medium">{activeStudent.name}</p>
-                <p className="mt-0.5 text-xs text-[var(--color-ink-soft)] dark:text-white/50">
-                  Grading as the teacher. What you record stands for today.
-                </p>
-              </div>
-            ) : (
-              <Coach said={said} />
-            )}
-
-            {!teaching && <TeacherNotes notes={teacherNotes} />}
-
-            {worstSpot && (
-              <TroubleSpotCard
-                spot={worstSpot}
-                onJump={() =>
-                  queueRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                }
-              />
-            )}
-
-            <section ref={queueRef} className="scroll-mt-4">
-              <div className="mb-2.5 flex items-baseline justify-between gap-3">
-                <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-ink-soft)] dark:text-white/55">
-                  Due today{due.length > 0 && ` · ${due.length}`}
-                </h2>
-                <p className="hidden text-[11px] text-[var(--color-ink-soft)] sm:block dark:text-white/45">
-                  Keys 1 solid, 2 shaky, 3 lost, U undo
-                </p>
-              </div>
-
-              {due.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-[var(--color-rule)] p-5 text-sm text-[var(--color-ink-soft)] dark:border-white/15 dark:text-white/55">
-                  {gradedToday > 0
-                    ? "Queue clear. Nothing else is asking for you today."
-                    : portions.length === 0
-                      ? "Nothing tracked yet. Add a portion below to begin."
-                      : "Nothing due today."}
-                </p>
+        {teaching && !activeId ? (
+          <div className="card grid place-items-center px-6 py-16 text-center">
+            <p className="text-lg font-bold">Add your first student</p>
+            <p className="mt-1 max-w-md text-[15px] text-[var(--color-ink-soft)]">
+              Use Add student above. What you record is your assessment, and it takes precedence over their own for the day.
+            </p>
+            <button type="button" className="mt-4 text-sm font-bold text-[var(--color-brand)] hover:underline" onClick={() => openHelp("teaching")}>
+              How teaching mode works
+            </button>
+          </div>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+            <div className="space-y-6">
+              {teaching && activeStudent ? (
+                <div className="card flex items-center gap-3 p-4">
+                  <span className="grid size-10 place-items-center rounded-xl bg-[var(--color-dawn-soft)] text-sm font-bold text-[var(--color-dawn-deep)]">
+                    {activeStudent.name.slice(0, 1).toUpperCase()}
+                  </span>
+                  <div>
+                    <p className="font-bold">{activeStudent.name}</p>
+                    <p className="text-xs text-[var(--color-ink-soft)]">Grading as the teacher. What you record stands for today.</p>
+                  </div>
+                </div>
               ) : (
-                <DueList
-                  portions={due}
-                  today={today}
-                  troubleIds={troubleIds}
-                  teacherSaid={teacherSaid}
-                  onGrade={grade}
+                <Coach
+                  said={said}
+                  dateLabel={dateLabel}
+                  dueCount={due.length}
+                  dueAyahs={dueAyahs}
+                  done={gradedToday}
+                  onStart={() => queueRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
                 />
               )}
-            </section>
 
-            {spots.length > 1 && (
-              <section>
-                <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-ink-soft)] dark:text-white/55">
-                  Also worth re-learning
-                </h2>
-                <ul className="space-y-1.5">
-                  {spots.slice(1).map((spot) => (
-                    <li
-                      key={spot.portion.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-[var(--color-rule)] px-3 py-2 text-sm dark:border-white/10"
-                    >
-                      <span className="min-w-0 truncate">
-                        {describePortion(spot.portion)}
-                      </span>
-                      <span className="shrink-0 text-xs text-[var(--color-ink-soft)] dark:text-white/50">
-                        {spot.portion.lapses} lapses
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-2 text-xs text-[var(--color-ink-soft)] dark:text-white/50">
-                  Another week of revision is unlikely to fix what did not settle the
-                  first time.
-                </p>
-              </section>
-            )}
-          </div>
+              {!teaching && <TeacherNotes notes={teacherNotes} />}
 
-          <div className="space-y-5 lg:sticky lg:top-6">
-            <ProgressCard progress={progress} />
-            <WeekAhead load={load} />
-
-            <section>
-              <div className="mb-2.5 flex items-center justify-between gap-3">
-                <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-ink-soft)] dark:text-white/55">
-                  {teaching && activeStudent
-                    ? `${activeStudent.name}'s trail`
-                    : "Your trail"}
-                </h2>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setState((prev) =>
-                      prev && activeId ? replacePortions(prev, activeId, []) : prev
-                    )
-                  }
-                  className="rounded-lg border border-[var(--color-rule)] px-2.5 py-1 text-[11px] text-[var(--color-ink-soft)] dark:border-white/15 dark:text-white/55"
-                >
-                  Clear everything
-                </button>
-              </div>
-
-              <AddPortionForm
-                onAdd={(portion) =>
-                  setState((prev) =>
-                    prev && activeId
-                      ? addPortion(prev, activeId, {
-                          ...portion,
-                          box: 0,
-                          lastReviewed: null,
-                          addedOn: today,
-                          lapses: 0,
-                        })
-                      : prev
-                  )
-                }
-              />
-
-              {portions.length > 0 && (
-                <div className="mt-3">
-                  <TrailList
-                    portions={portions}
-                    onRemove={(id) =>
-                      setState((prev) =>
-                        prev && activeId ? removePortion(prev, activeId, id) : prev
-                      )
-                    }
-                  />
-                </div>
+              {worstSpot && (
+                <TroubleSpotCard
+                  spot={worstSpot}
+                  onJump={() => queueRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                />
               )}
 
-              {/* Only for the person's own trail. A teacher's register of
-                  other people's children is not something to put on a server
-                  by accident, so it moves by file and nothing here offers
-                  otherwise. */}
-              {!teaching &&
-                (account.kind === "signed-in" || account.kind === "synced") && (
+              <section ref={queueRef} className="scroll-mt-24" aria-labelledby="queue-title">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h2 id="queue-title" className="text-lg font-extrabold tracking-tight">
+                    Today&apos;s queue{due.length > 0 && <span className="ml-2 text-[var(--color-ink-faint)]">{due.length}</span>}
+                  </h2>
+                  <button type="button" onClick={() => openHelp("grades")} className="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-brand)] hover:underline">
+                    <CircleHelp className="size-4" /> How to grade
+                  </button>
+                </div>
+
+                {due.length === 0 ? (
+                  <div className="card px-6 py-12 text-center">
+                    <p className="text-lg font-bold">
+                      {gradedToday > 0 ? "Queue clear. Well done." : portions.length === 0 ? "Your trail is empty" : "Nothing due today"}
+                    </p>
+                    <p className="mx-auto mt-1 max-w-sm text-[15px] text-[var(--color-ink-soft)]">
+                      {gradedToday > 0
+                        ? "Nothing else is asking for you today. Come back tomorrow."
+                        : portions.length === 0
+                          ? "Add the surahs you have memorised, and today's queue will appear here."
+                          : "Everything on your trail is holding. Check the week ahead before adding something new."}
+                    </p>
+                    {portions.length === 0 && (
+                      <a href="#add" className="btn btn-primary mt-5">
+                        <Plus className="size-4" /> Add what you know
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <DueList portions={due} today={today} troubleIds={troubleIds} teacherSaid={teacherSaid} onGrade={grade} />
+                )}
+                {due.length > 0 && (
+                  <p className="mt-3 hidden text-center text-xs text-[var(--color-ink-faint)] sm:block">
+                    Keyboard: 1 solid, 2 shaky, 3 lost, U undo
+                  </p>
+                )}
+              </section>
+
+              {spots.length > 1 && (
+                <section className="card p-5">
+                  <h2 className={sectionTitle}>Also worth re-learning</h2>
+                  <ul className="mt-3 divide-y divide-[var(--color-rule)]">
+                    {spots.slice(1).map((spot) => (
+                      <li key={spot.portion.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                        <span className="min-w-0 truncate font-semibold">{describePortion(spot.portion)}</span>
+                        <span className="shrink-0 rounded-md bg-[var(--color-lost-soft)] px-2 py-0.5 text-xs font-semibold text-[var(--color-lost)]">
+                          lost {spot.portion.lapses} times
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-sm text-[var(--color-ink-soft)]">Another week of revision is unlikely to fix what did not settle the first time.</p>
+                </section>
+              )}
+            </div>
+
+            <aside className="space-y-6 lg:sticky lg:top-24">
+              <ProgressCard progress={progress} />
+              <WeekAhead load={load} />
+
+              <section id="add" className="card scroll-mt-24 p-5">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h2 className="font-extrabold">{teaching && activeStudent ? `${activeStudent.name}'s trail` : "Your trail"}</h2>
+                  {portions.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm("Remove every portion from this trail? A backup file is the only way to bring them back.")) {
+                          setState((prev) => (prev && activeId ? replacePortions(prev, activeId, []) : prev));
+                        }
+                      }}
+                      className="text-xs font-semibold text-[var(--color-ink-faint)] hover:text-[var(--color-lost)]"
+                    >
+                      Clear everything
+                    </button>
+                  )}
+                </div>
+                <p className="mb-3 text-sm text-[var(--color-ink-soft)]">Add a surah, or part of one. Leave the last ayah empty for the whole surah.</p>
+
+                <AddPortionForm
+                  onAdd={(portion) =>
+                    setState((prev) =>
+                      prev && activeId
+                        ? addPortion(prev, activeId, { ...portion, box: 0, lastReviewed: null, addedOn: today, lapses: 0 })
+                        : prev
+                    )
+                  }
+                />
+
+                {portions.length > 0 && (
+                  <div className="mt-4">
+                    <TrailList
+                      portions={portions}
+                      onRemove={(id) => setState((prev) => (prev && activeId ? removePortion(prev, activeId, id) : prev))}
+                    />
+                  </div>
+                )}
+
+                {suggestions.length > 0 && (
+                  <div className="mt-5 border-t border-[var(--color-rule)] pt-4">
+                    <p className="text-sm font-bold">Ideas for what to learn next</p>
+                    <p className="mb-2 text-xs text-[var(--color-ink-soft)]">The shortest surahs you have not started.</p>
+                    <ul className="flex flex-wrap gap-1.5">
+                      {suggestions.map((item) => (
+                        <li key={item.number} className="rounded-lg bg-[var(--color-wash)] px-2.5 py-1 text-xs font-medium">
+                          {item.name} <span className="text-[var(--color-ink-faint)]">{item.ayahCount}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </section>
+
+              <section id="account" className="card scroll-mt-24 p-5">
+                <h2 className="font-extrabold">Keep it safe</h2>
+                {/* Only the person's own trail syncs. A teacher's register of other
+                    people's children moves by file, and nothing here offers otherwise. */}
+                {!teaching && (account.kind === "signed-in" || account.kind === "synced") ? (
                   <SyncPanel
                     email={account.email}
                     synced={account.kind === "synced"}
@@ -585,98 +602,90 @@ export default function Home() {
                     onSync={sync}
                     onSignOut={endSession}
                   />
+                ) : (
+                  !teaching && (
+                    <p className="mt-1 text-sm text-[var(--color-ink-soft)]">
+                      {describeWhereDataLives(account)}.{" "}
+                      {account.kind === "signed-out" ? (
+                        <>
+                          <a href="/signup" className="font-bold text-[var(--color-brand)] hover:underline">Create a free account</a> to use it on every device.
+                        </>
+                      ) : (
+                        "Save a backup file now and then."
+                      )}
+                    </p>
+                  )
                 )}
 
-              <BackupControls
-                portions={portions}
-                trail={activeTrail}
-                today={today}
-                mode={state.mode}
-                subject={
-                  activeTrail.subjectId
-                    ? {
-                        id: activeTrail.subjectId,
-                        // The teacher knows the student by name; a student's
-                        // own device has no name for itself worth writing
-                        // into a file.
-                        name: teaching ? (activeStudent?.name ?? null) : null,
-                      }
-                    : null
-                }
-                // The merge happens here, not inside a setState updater, and
-                // hands back its counts so the panel can say what actually
-                // arrived rather than guessing.
-                onTakeIn={(incoming) => {
-                  if (!activeId) return null;
-                  const result = takeInTrail(state, activeId, incoming);
-                  if (!result.ok) {
-                    return { ok: false, subjectName: result.subjectName };
+                <BackupControls
+                  portions={portions}
+                  trail={activeTrail}
+                  today={today}
+                  mode={state.mode}
+                  subject={
+                    activeTrail.subjectId
+                      ? {
+                          id: activeTrail.subjectId,
+                          // The teacher knows the student by name; a student's own
+                          // device has no name for itself worth writing into a file.
+                          name: teaching ? (activeStudent?.name ?? null) : null,
+                        }
+                      : null
                   }
-                  setState(result.state);
-                  return {
-                    ok: true,
-                    added: result.added,
-                    alreadyHad: result.alreadyHad,
-                    grades: result.grades,
-                  };
-                }}
-              />
-            </section>
-
-            {suggestions.length > 0 && (
-              <section>
-                <h2 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-ink-soft)] dark:text-white/55">
-                  Not started yet
-                </h2>
-                <p className="mb-2 text-xs text-[var(--color-ink-soft)] dark:text-white/50">
-                  Shortest first, a good place to go next.
-                </p>
-                <ul className="flex flex-wrap gap-1.5">
-                  {suggestions.map((item) => (
-                    <li
-                      key={item.number}
-                      className="rounded-lg border border-[var(--color-rule)] px-2.5 py-1 text-xs dark:border-white/10"
-                    >
-                      {item.name}{" "}
-                      <span className="text-[var(--color-ink-soft)] dark:text-white/50">
-                        {item.ayahCount}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                  // The merge happens here, not inside a setState updater, and
+                  // hands back its counts so the panel can say what arrived.
+                  onTakeIn={(incoming) => {
+                    if (!activeId) return null;
+                    const result = takeInTrail(state, activeId, incoming);
+                    if (!result.ok) {
+                      return { ok: false, subjectName: result.subjectName };
+                    }
+                    setState(result.state);
+                    return { ok: true, added: result.added, alreadyHad: result.alreadyHad, grades: result.grades };
+                  }}
+                />
               </section>
-            )}
+            </aside>
           </div>
-        </div>
-      )}
+        )}
+      </main>
 
       {/* Undo rides above the home indicator on a phone. A mis-tapped "lost"
-          resets a portion a student spent a month on, and asking them to
-          re-grade it from memory is not a recovery. */}
+          resets a portion a student spent a month on. */}
       {lastGrade && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-[var(--color-rule)] bg-[var(--color-card)] px-4 py-2.5 shadow-lg dark:border-white/15 dark:bg-[#23201a]">
-            <p className="min-w-0 flex-1 truncate text-xs text-[var(--color-ink-soft)] dark:text-white/60">
-              {lastGrade.label} marked {lastGrade.grade}
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-2xl bg-[var(--color-ink)] px-4 py-3 text-white shadow-[var(--shadow-lift)]">
+            <p className="min-w-0 flex-1 truncate text-sm">
+              {lastGrade.label} marked <strong>{lastGrade.grade}</strong>
             </p>
-            <button
-              type="button"
-              onClick={undo}
-              className="min-h-9 shrink-0 rounded-lg bg-[var(--color-brand)] px-3 text-xs font-medium text-white active:opacity-80"
-            >
+            <button type="button" onClick={undo} className="min-h-9 shrink-0 rounded-lg bg-white/15 px-3 text-sm font-bold hover:bg-white/25">
               Undo
             </button>
-            <button
-              type="button"
-              onClick={() => setLastGrade(null)}
-              aria-label="Dismiss"
-              className="min-h-9 shrink-0 px-1 text-xs text-[var(--color-ink-soft)] dark:text-white/50"
-            >
+            <button type="button" onClick={() => setLastGrade(null)} aria-label="Dismiss" className="min-h-9 shrink-0 px-1 text-sm text-white/70">
               Close
             </button>
           </div>
         </div>
       )}
-    </main>
+
+      <HelpCenter
+        open={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        topic={helpTopic}
+        onTopic={setHelpTopic}
+        onReplayTour={() => {
+          setHelpOpen(false);
+          setTourOpen(true);
+        }}
+      />
+      <Onboarding
+        open={tourOpen}
+        onClose={() => setTourOpen(false)}
+        hasSample={isSample}
+        onStartEmpty={() => setState((prev) => (prev && activeId ? replacePortions(prev, activeId, []) : prev))}
+        accountsOpen={account.kind !== "not-configured"}
+        signedIn={account.kind === "signed-in" || account.kind === "synced"}
+      />
+    </div>
   );
 }

@@ -1,27 +1,58 @@
 @import "tailwindcss";
 
 /* The palette lives here so a contributor restyling the app edits one file.
-   Warm and paper-like rather than the usual app blue: this is a record of
-   something done slowly over years, and it should not look like a dashboard. */
+
+   "Fajr": the hour most revision actually happens. Night indigo for the brand,
+   the first light of dawn as the one accent, on a cool paper rather than the
+   cream every "spiritual" app reaches for. The three grade colours mean state
+   and nothing else: the brand is never used to say "good". */
 @theme {
-  --color-ink: #1c1a16;
-  --color-ink-soft: #6b6353;
-  --color-parchment: #faf7f0;
+  /* "Halaqah": bright, chunky and encouraging, for the students who actually
+     do hifz, many of them young. One committed light look. Jade is the brand
+     and "solid"; sun is "shaky"; coral is "lost". Buttons are pressable: they
+     sit on a darker ledge and sink when pressed. */
+  --color-ink: #26213f;
+  --color-ink-soft: #5b5577;
+  --color-ink-faint: #8f89a8;
+  --color-parchment: #ffffff; /* the page; the name predates the palette */
   --color-card: #ffffff;
-  --color-rule: #e6e0d2;
+  --color-rule: #ece8f7;
+  --color-rule-strong: #ddd6f0;
+  --color-wash: #faf8ff;
+  --color-tint: #fff7e0; /* the warm hero band */
 
-  --color-brand: #7a5c1e;
-  --color-brand-soft: #f3ecdb;
+  --color-brand: #14a86b;
+  --color-brand-deep: #0b7a4c;
+  --color-brand-soft: #e3f7ee;
+  --color-brand-tint: #faf8ff;
+  --color-sun: #ffc83d;
+  --color-sun-deep: #d9a01a;
+  --color-dawn: #ff6a57; /* coral; the name predates the palette */
+  --color-dawn-deep: #d4473a;
+  --color-dawn-soft: #ffeae6;
+  --color-sky: #4cb8f5;
 
-  --color-solid: #2f6b3d;
-  --color-shaky: #9a6b12;
-  --color-lost: #96302f;
+  --color-solid: #14a86b;
+  --color-shaky: #e3a514;
+  --color-lost: #ff6a57;
+  --color-solid-soft: #e3f7ee;
+  --color-shaky-soft: #fff4d6;
+  --color-lost-soft: #ffeae6;
 
-  /* The browser's built-in easings are too weak to read as deliberate.
-     These are the two the landing page uses; nothing in the app itself
-     animates, and that is on purpose. */
+  --font-sans: var(--font-nunito), "Nunito", ui-rounded, ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-nunito), "Nunito", ui-rounded, ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-nunito), "Nunito", ui-rounded, sans-serif;
+  --font-quran: var(--font-amiri-quran), "Amiri Quran", "Amiri", serif;
+
+  --shadow-card: none;
+  --shadow-lift: 0 6px 0 var(--color-rule-strong);
+
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+:root {
+  color-scheme: light;
 }
 
 html,
@@ -30,12 +61,117 @@ body {
   color: var(--color-ink);
 }
 
-@media (prefers-color-scheme: dark) {
-  html,
-  body {
-    background: #15130f;
-    color: #f2ece0;
-  }
+body {
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+
+/* --- Shared pieces ---------------------------------------------------- */
+
+.card {
+  background: var(--color-card);
+  border: 3px solid var(--color-rule);
+  border-radius: 1.5rem;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+
+/* The hero: plain white, the way the rest of the page is. */
+.sky {
+  background: var(--color-parchment);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0 1.4rem;
+  border-radius: 1rem;
+  font-weight: 900;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  transition: transform 90ms ease-out, box-shadow 90ms ease-out, background-color 150ms, color 150ms;
+}
+.btn:disabled { opacity: 0.5; }
+/* Pressable: the button sits on a darker ledge and sinks onto it. */
+.btn-primary, .btn-dawn, .btn-ghost { transform: translateY(0); }
+.btn-primary { background: var(--color-brand); color: #fff; box-shadow: 0 5px 0 var(--color-brand-deep); text-transform: uppercase; }
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-dawn { background: var(--color-dawn); color: #fff; box-shadow: 0 5px 0 var(--color-dawn-deep); text-transform: uppercase; }
+.btn-ghost { background: var(--color-card); color: var(--color-ink); border: 3px solid var(--color-rule); box-shadow: 0 4px 0 var(--color-rule); }
+.btn-ghost:hover { border-color: var(--color-rule-strong); box-shadow: 0 4px 0 var(--color-rule-strong); }
+.btn-primary:active, .btn-dawn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--color-brand-deep); }
+.btn-dawn:active { box-shadow: 0 1px 0 var(--color-dawn-deep); }
+.btn-ghost:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--color-rule-strong); }
+.btn-sm { min-height: 2.4rem; padding: 0 1rem; font-size: 0.82rem; border-radius: 0.8rem; }
+.btn-sm.btn-primary { box-shadow: 0 4px 0 var(--color-brand-deep); }
+
+.field {
+  min-height: 3rem;
+  width: 100%;
+  border-radius: 1rem;
+  border: 3px solid var(--color-rule);
+  font-weight: 700;
+  background: var(--color-card);
+  padding: 0 0.875rem;
+  font-size: 1rem;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.field:focus { outline: none; border-color: var(--color-brand); }
+
+:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+
+/* The three grades: solid colour on a darker ledge, sinking when pressed. */
+.grade-btn { min-height: 3.25rem; border-radius: 1rem; font-weight: 900; font-size: 0.95rem; color: #fff; text-transform: uppercase; letter-spacing: 0.02em; transition: transform 90ms ease-out, box-shadow 90ms ease-out; }
+.grade-btn:active { transform: translateY(4px); }
+.grade-solid { background: var(--color-solid); box-shadow: 0 5px 0 #0b7a4c; } .grade-solid:active { box-shadow: 0 1px 0 #0b7a4c; }
+.grade-shaky { background: var(--color-sun); color: var(--color-ink); box-shadow: 0 5px 0 var(--color-sun-deep); } .grade-shaky:active { box-shadow: 0 1px 0 var(--color-sun-deep); }
+.grade-lost { background: var(--color-lost); box-shadow: 0 5px 0 var(--color-dawn-deep); } .grade-lost:active { box-shadow: 0 1px 0 var(--color-dawn-deep); }
+
+/* Native <dialog> for every modal: focus is trapped and Escape closes it for
+   free. These give it a backdrop and a short, interruptible entrance. */
+dialog.modal {
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  max-width: min(40rem, calc(100vw - 1.5rem));
+  width: 100%;
+  max-height: calc(100dvh - 2rem);
+  overflow: visible;
+}
+dialog.modal::backdrop { background: rgb(38 33 63 / 0.45); }
+dialog.modal[open] .modal-panel { animation: modal-in 260ms var(--ease-out) both; }
+dialog.modal[open]::backdrop { animation: fade-in 200ms ease-out both; }
+@keyframes modal-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 639px) {
+  dialog.modal { margin: auto 0 0; max-width: 100vw; max-height: 92dvh; }
+  dialog.modal .modal-panel { border-bottom-left-radius: 0; border-bottom-right-radius: 0; padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+  dialog.modal[open] .modal-panel { animation-name: sheet-in; }
+}
+@keyframes sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+
+.rise { animation: rise 700ms var(--ease-out) both; animation-delay: var(--rise, 0ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* Figures (ayah counts, intervals, dates) line up in columns. */
+.figure {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--color-dawn-soft);
+  color: var(--color-ink);
 }
 
 /* --- Phone behaviour -------------------------------------------------- */
@@ -190,6 +326,7 @@ button {
    already there. Gentler, not absent - and crucially not delayed, since the
    blanket rule above collapses the duration but leaves the delay standing. */
 @media (prefers-reduced-motion: reduce) {
+  .rise,
   .mushaf-page--left,
   .mushaf-page--right,
   .mushaf-line,

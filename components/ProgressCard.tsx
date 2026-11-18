@@ -1,42 +1,41 @@
 import type { Progress } from "@/lib/progress";
 
+/**
+ * How much of the Qur'an the trail holds, drawn as thirty cells filling in.
+ * The cells are thirtieths of the Qur'an by ayah count: a picture of the share,
+ * not a claim about which juz are held (there is no juz data yet).
+ */
 export function ProgressCard({ progress }: { progress: Progress }) {
+  const filled = Math.min(30, Math.round((progress.percent / 100) * 30));
+  const started = progress.percent > 0 && filled === 0 ? 1 : 0;
   return (
-    <section
-      aria-label="Progress"
-      className="rounded-2xl border border-[var(--color-rule)] bg-[var(--color-card)] p-4 sm:p-5 dark:border-white/10 dark:bg-white/5"
-    >
-      <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
-        <p className="text-2xl font-semibold tabular-nums sm:text-3xl">
-          {progress.ayahsMemorised.toLocaleString()}
-          <span className="text-sm font-normal text-[var(--color-ink-soft)] dark:text-white/55">
-            {" "}
-            / {progress.totalAyahs.toLocaleString()} ayahs
-          </span>
-        </p>
-        <p className="text-sm tabular-nums text-[var(--color-ink-soft)] dark:text-white/55">
-          {progress.percent.toFixed(1)}%
-        </p>
+    <section aria-label="Progress" className="card p-5">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-lg font-black">Your memorisation</p>
+        <p className="text-2xl font-black text-[var(--color-brand)] tabular-nums">{progress.percent.toFixed(1)}%</p>
       </div>
-
-      <div
-        className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-[var(--color-brand-soft)] dark:bg-white/10"
-        role="progressbar"
-        aria-valuenow={Math.round(progress.percent)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label="Proportion of the Qur'an memorised"
-      >
-        <div
-          className="h-full rounded-full bg-[var(--color-brand)] transition-[width] duration-500 ease-out"
-          style={{ width: `${Math.min(100, progress.percent)}%` }}
-        />
+      <div className="mt-3 grid grid-cols-10 gap-1.5" role="img" aria-label={`${progress.percent.toFixed(1)}% of the Qur'an`}>
+        {Array.from({ length: 30 }, (_, i) => (
+          <span
+            key={i}
+            className="aspect-square rounded-lg"
+            style={{ background: i < filled ? "var(--color-brand)" : i < filled + started ? "var(--color-sun)" : "var(--color-rule)" }}
+          />
+        ))}
       </div>
-
-      <p className="mt-2.5 text-xs text-[var(--color-ink-soft)] dark:text-white/55">
-        {progress.surahsComplete} surah{progress.surahsComplete === 1 ? "" : "s"}{" "}
-        complete · {progress.surahsStarted} started
-      </p>
+      <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
+        {[
+          [progress.ayahsMemorised.toLocaleString(), "ayahs"],
+          [progress.surahsComplete, "surahs whole"],
+          [progress.surahsStarted, "started"],
+        ].map(([v, l]) => (
+          <div key={l as string} className="rounded-2xl bg-[var(--color-wash)] px-1 py-2.5">
+            <dt className="sr-only">{l}</dt>
+            <dd className="text-xl font-black tabular-nums">{v}</dd>
+            <p className="text-xs font-bold text-[var(--color-ink-soft)]">{l}</p>
+          </div>
+        ))}
+      </dl>
     </section>
   );
 }
