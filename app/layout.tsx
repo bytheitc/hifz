@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Amiri_Quran, Nunito } from "next/font/google";
+import { ServiceWorkerBridge } from "@/components/pwa/ServiceWorkerBridge";
 import "./globals.css";
 
 const sans = Nunito({ subsets: ["latin"], weight: ["600", "700", "800", "900"], variable: "--font-nunito" });
@@ -41,7 +42,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${sans.variable} ${quran.variable}`}>
-      <body className="min-h-dvh antialiased">{children}</body>
+      <body className="min-h-dvh antialiased">
+        {children}
+        <ServiceWorkerBridge />
+      </body>
     </html>
   );
 }
