@@ -122,11 +122,11 @@ export function BackupControls({
   }
 
   return (
-    <div className="mt-3 rounded-xl border border-[var(--color-rule)] p-3 dark:border-white/10">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-ink-soft)] dark:text-white/55">
+    <div className="mt-4 border-t border-[var(--color-rule)] pt-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-ink-soft)] ">
         {teaching ? "Their own record" : "Backup"}
       </p>
-      <p className="mt-1 text-xs text-[var(--color-ink-soft)] dark:text-white/50">
+      <p className="mt-1 text-xs text-[var(--color-ink-soft)] ">
         {teaching
           ? "Take in the file a student saved on their own phone, to see what they did between sessions."
           : "This trail lives only in this browser. Keep a copy somewhere you own."}
@@ -137,12 +137,12 @@ export function BackupControls({
           type="button"
           onClick={exportTrail}
           disabled={portions.length === 0}
-          className="min-h-[44px] flex-1 rounded-xl border border-[var(--color-rule)] px-3 text-sm disabled:opacity-40 dark:border-white/15 sm:min-h-0 sm:py-2"
+          className="min-h-[44px] flex-1 rounded-xl border border-[var(--color-rule)] px-3 text-sm disabled:opacity-40  sm:min-h-0 sm:py-2"
         >
           Save a copy
         </button>
 
-        <label className="min-h-[44px] flex-1 cursor-pointer rounded-xl border border-[var(--color-rule)] px-3 text-center text-sm leading-[44px] dark:border-white/15 sm:min-h-0 sm:py-2 sm:leading-normal">
+        <label className="min-h-[44px] flex-1 cursor-pointer rounded-xl border border-[var(--color-rule)] px-3 text-center text-sm leading-[44px]  sm:min-h-0 sm:py-2 sm:leading-normal">
           {teaching ? "Take in" : "Restore"}
           <input
             type="file"
@@ -164,13 +164,13 @@ export function BackupControls({
         className={`mt-2 min-h-[1rem] text-xs ${
           failed
             ? "text-[var(--color-lost)]"
-            : "text-[var(--color-ink-soft)] dark:text-white/50"
+            : "text-[var(--color-ink-soft)] "
         }`}
       >
         {said}
       </p>
 
-      <p className="mt-1.5 text-[11px] text-[var(--color-ink-soft)] dark:text-white/40">
+      <p className="mt-1.5 text-[11px] text-[var(--color-ink-soft)] ">
         {teaching
           ? "Their grades are added alongside yours. What you recorded in halaqah still stands for the days you heard them."
           : "Only adds what is missing. Grades your teacher recorded will stand for the days they heard you."}

@@ -68,7 +68,7 @@ export function StudentRoster({
           />
           <button
             type="submit"
-            className="min-h-11 shrink-0 rounded-xl bg-[var(--color-brand)] px-4 text-sm font-medium text-white active:opacity-80"
+            className="min-h-11 shrink-0 rounded-xl bg-[var(--color-brand)] px-4 text-sm font-medium text-[var(--color-card)] active:opacity-80"
           >
             Add
           </button>
@@ -94,7 +94,7 @@ export function StudentRoster({
                   aria-current={active ? "true" : undefined}
                   className={`min-h-11 rounded-xl border px-3 py-1.5 text-left text-sm ${
                     active
-                      ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-white"
+                      ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-[var(--color-card)]"
                       : "border-[var(--color-rule)] dark:border-white/15"
                   }`}
                 >

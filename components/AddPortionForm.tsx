@@ -96,7 +96,7 @@ export function AddPortionForm({
         />
         <button
           type="submit"
-          className="min-h-11 flex-1 rounded-xl bg-[var(--color-brand)] px-4 text-sm font-medium text-white active:opacity-80"
+          className="min-h-11 flex-1 rounded-xl bg-[var(--color-brand)] px-4 text-sm font-medium text-[var(--color-card)] active:opacity-80"
         >
           Add portion
         </button>

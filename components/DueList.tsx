@@ -1,6 +1,6 @@
 "use client";
 
-import { describePortion } from "@/lib/quran";
+import { describePortion, surah } from "@/lib/quran";
 import { type Grade, type TrackedPortion, daysBetween, dueDate } from "@/lib/srs";
 import type { DateOnly } from "@/lib/srs";
 
@@ -37,7 +37,7 @@ export function DueList({
   onGrade: (portion: TrackedPortion, grade: Grade) => void;
 }) {
   return (
-    <ul className="space-y-2.5">
+    <ul className="space-y-3">
       {portions.map((portion) => {
         const overdue = daysBetween(dueDate(portion), today);
         const trouble = troubleIds.has(portion.id);
@@ -47,64 +47,67 @@ export function DueList({
           <li
             key={portion.id}
             id={`portion-${portion.id}`}
-            className={`scroll-mt-4 rounded-2xl border bg-[var(--color-card)] p-3.5 dark:bg-white/5 ${
-              trouble
-                ? "border-[var(--color-lost)]/40"
-                : "border-[var(--color-rule)] dark:border-white/10"
+            className={`scroll-mt-24 rounded-3xl border-[3px] bg-[var(--color-card)] p-4 ${
+              trouble ? "border-[var(--color-lost)]/50" : "border-[var(--color-rule)]"
             }`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate text-[15px] font-medium">
-                  {describePortion(portion)}
+                <p className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+                  <span className="text-lg font-black">{describePortion(portion)}</span>
+                  <span lang="ar" dir="rtl" className="font-quran text-2xl leading-none text-[var(--color-sky)]">
+                    {surah(portion.surah)?.arabicName}
+                  </span>
                 </p>
-                <p className="mt-0.5 text-xs text-[var(--color-ink-soft)] dark:text-white/55">
-                  {portion.lastReviewed
-                    ? `last recited ${portion.lastReviewed}`
-                    : "new, not yet revised"}
-                  {overdue > 0 && ` · ${overdue} day${overdue === 1 ? "" : "s"} overdue`}
-                  {portion.lapses > 0 &&
-                    ` · ${portion.lapses} lapse${portion.lapses === 1 ? "" : "s"}`}
+                <p className="mt-1.5 flex flex-wrap gap-1.5 text-xs">
+                  <span className="rounded-md bg-[var(--color-wash)] px-2 py-0.5 text-[var(--color-ink-soft)]">
+                    {portion.toAyah - portion.fromAyah + 1} ayahs
+                  </span>
+                  <span className="rounded-md bg-[var(--color-wash)] px-2 py-0.5 text-[var(--color-ink-soft)]">
+                    {portion.lastReviewed ? `last recited ${portion.lastReviewed}` : "new, not revised yet"}
+                  </span>
+                  {overdue > 0 && (
+                    <span className="rounded-md bg-[var(--color-shaky-soft)] px-2 py-0.5 font-semibold text-[var(--color-shaky)]">
+                      {overdue} day{overdue === 1 ? "" : "s"} overdue
+                    </span>
+                  )}
+                  {portion.lapses > 0 && (
+                    <span className="rounded-md bg-[var(--color-wash)] px-2 py-0.5 text-[var(--color-ink-soft)]">
+                      lost {portion.lapses} time{portion.lapses === 1 ? "" : "s"}
+                    </span>
+                  )}
                 </p>
               </div>
               {trouble && (
-                <span className="shrink-0 rounded-full bg-[var(--color-lost)]/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[var(--color-lost)]">
-                  slipping
+                <span className="shrink-0 rounded-full bg-[var(--color-lost-soft)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--color-lost)]">
+                  Slipping
                 </span>
               )}
             </div>
 
             {fromTeacher && (
-              // Said plainly, and attributed. A box that moved because
-              // someone heard you recite is not the same event as a box that
-              // moved because you graded yourself, and the student is owed
-              // the difference.
-              <p className="mt-2 rounded-lg bg-black/[0.03] px-2.5 py-1.5 text-xs text-[var(--color-ink-soft)] dark:bg-white/5 dark:text-white/60">
+              // Said plainly, and attributed: a box moved by someone who heard
+              // you recite is a different event from one you moved yourself.
+              <p className="mt-3 rounded-xl bg-[var(--color-wash)] px-3 py-2 text-xs text-[var(--color-ink-soft)]">
                 Your teacher marked this{" "}
-                <span
-                  style={{ color: `var(--color-${fromTeacher.grade})` }}
-                  className="font-medium"
-                >
+                <span style={{ color: `var(--color-${fromTeacher.grade})` }} className="font-bold">
                   {fromTeacher.grade}
                 </span>{" "}
                 on {fromTeacher.on}.
               </p>
             )}
 
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="mt-4 grid grid-cols-3 gap-2.5 pb-1">
               {GRADES.map((grade) => (
                 <button
                   key={grade.value}
                   type="button"
                   onClick={() => onGrade(portion, grade.value)}
-                  style={{ backgroundColor: grade.colour }}
-                  className="min-h-11 rounded-xl text-sm font-medium text-white transition-opacity active:opacity-75"
+                  className={`grade-btn grade-${grade.value}`}
                   aria-label={`${grade.label}: ${describePortion(portion)}`}
                 >
                   {grade.label}
-                  <span className="ml-1.5 hidden text-[10px] opacity-60 sm:inline">
-                    {grade.hint}
-                  </span>
+                  <span className="ml-1.5 hidden text-[11px] opacity-60 sm:inline">{grade.hint}</span>
                 </button>
               ))}
             </div>

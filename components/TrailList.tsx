@@ -14,22 +14,24 @@ export function TrailList({
     (a, b) => a.surah - b.surah || a.fromAyah - b.fromAyah
   );
 
+  const short = (d: string) =>
+    new Date(`${d}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+
   return (
-    <ul className="space-y-1.5">
+    <ul className="divide-y divide-[var(--color-rule)] rounded-xl border border-[var(--color-rule)]">
       {sorted.map((portion) => (
-        <li
-          key={portion.id}
-          className="flex items-center gap-3 rounded-xl border border-[var(--color-rule)] px-3 py-2 text-sm dark:border-white/10"
-        >
-          <span className="min-w-0 flex-1 truncate">{describePortion(portion)}</span>
-          <span className="shrink-0 text-xs tabular-nums text-[var(--color-ink-soft)] dark:text-white/50">
-            box {portion.box} · {dueDate(portion)}
+        <li key={portion.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-semibold">{describePortion(portion)}</span>
+            <span className="text-xs text-[var(--color-ink-faint)]">
+              Stage {portion.box + 1} · next {short(dueDate(portion))}
+            </span>
           </span>
           <button
             type="button"
             aria-label={`Remove ${describePortion(portion)}`}
             onClick={() => onRemove(portion.id)}
-            className="-mr-1 shrink-0 px-2 py-1 text-xs text-[var(--color-ink-soft)] hover:underline dark:text-white/50"
+            className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-[var(--color-ink-faint)] hover:bg-[var(--color-lost-soft)] hover:text-[var(--color-lost)]"
           >
             Remove
           </button>

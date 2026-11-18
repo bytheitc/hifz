@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { describeFailure, login, register, rememberAccount, writeToken } from "@/lib/api";
 
@@ -12,9 +13,8 @@ import { describeFailure, login, register, rememberAccount, writeToken } from "@
  * choose before typing is a step that exists only for the developer's
  * convenience.
  */
-export function SignInForm() {
+export function SignInForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -41,13 +41,12 @@ export function SignInForm() {
     }
   }
 
-  const field =
-    "min-h-12 w-full rounded-xl border border-[var(--color-rule)] bg-transparent px-3.5 text-base dark:border-white/15";
+  const field = "field";
 
   return (
-    <form onSubmit={submit} className="mt-6 space-y-3">
+    <form onSubmit={submit} className="space-y-4">
       <div>
-        <label htmlFor="email" className="sr-only">
+        <label htmlFor="email" className="mb-1.5 block text-sm font-semibold">
           Email
         </label>
         <input
@@ -63,7 +62,7 @@ export function SignInForm() {
       </div>
 
       <div>
-        <label htmlFor="password" className="sr-only">
+        <label htmlFor="password" className="mb-1.5 block text-sm font-semibold">
           Password
         </label>
         <input
@@ -80,7 +79,7 @@ export function SignInForm() {
           className={field}
         />
         {registering && (
-          <p className="mt-1.5 text-xs text-[var(--color-ink-soft)] dark:text-white/50">
+          <p className="mt-1.5 text-xs text-[var(--color-ink-soft)]">
             Length is what makes a password hard to guess. A short phrase you
             will remember beats a short one you will not.
           </p>
@@ -90,7 +89,7 @@ export function SignInForm() {
       <button
         type="submit"
         disabled={busy}
-        className="min-h-12 w-full rounded-xl bg-[var(--color-brand)] text-sm font-medium text-white transition-opacity duration-150 ease-out active:opacity-80 disabled:opacity-50"
+        className="btn btn-primary w-full"
       >
         {busy ? "One moment" : registering ? "Create account" : "Sign in"}
       </button>
@@ -102,16 +101,12 @@ export function SignInForm() {
         {failed}
       </p>
 
-      <button
-        type="button"
-        onClick={() => {
-          setMode(registering ? "login" : "register");
-          setFailed(null);
-        }}
-        className="text-sm text-[var(--color-ink-soft)] underline-offset-4 hover:underline dark:text-white/60"
-      >
-        {registering ? "I already have an account" : "Create an account instead"}
-      </button>
+      <p className="text-center text-sm text-[var(--color-ink-soft)]">
+        {registering ? "Already have an account? " : "New to Hifz Trail? "}
+        <Link href={registering ? "/signin" : "/signup"} className="font-bold text-[var(--color-brand)] hover:underline">
+          {registering ? "Sign in" : "Create a free account"}
+        </Link>
+      </p>
     </form>
   );
 }

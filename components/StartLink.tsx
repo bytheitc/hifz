@@ -33,7 +33,7 @@ export function StartLink() {
   return (
     <Link
       href="/trail"
-      className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[var(--color-brand)] px-6 text-sm font-medium text-white transition-opacity duration-150 ease-out active:opacity-80 sm:text-[15px]"
+      className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[var(--color-brand)] px-6 text-sm font-medium text-[var(--color-card)] transition-opacity duration-150 ease-out active:opacity-80 sm:text-[15px]"
     >
       {returning ? "Continue your trail" : "Start on this device"}
     </Link>
