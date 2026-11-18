@@ -6,7 +6,7 @@ import {
   mergeEvents,
   schedulingEvents,
 } from "./grading";
-import { type Grade, type TrackedPortion, review } from "./srs";
+import { type Grade, type TrackedPortion, PRESETS, review } from "./srs";
 
 function portion(over: Partial<TrackedPortion> = {}): TrackedPortion {
   return {
@@ -230,5 +230,24 @@ describe("mergeEvents", () => {
     expect(applyGrades(base, mergeEvents(phone, teacher))).toEqual(
       applyGrades(base, mergeEvents(teacher, phone))
     );
+  });
+});
+
+describe("changing the revision ladder", () => {
+  it("folds the same history differently on a shorter ladder and gets it all back on return", () => {
+    const base = portion({ box: 0 });
+    const history = Array.from({ length: 5 }, (_, i) => event({ on: `2026-01-0${i + 1}` }));
+
+    const standard = applyGrades(base, history);
+    const four = applyGrades(base, history, [1, 3, 7, 16]);
+    const again = applyGrades(base, history, PRESETS.standard);
+
+    expect(standard.box).toBe(5);
+    expect(four.box).toBe(3);
+    // Nothing was written over the baseline, so the original answer is back.
+    expect(again).toEqual(standard);
+    expect(base.box).toBe(0);
+    expect(four.lapses).toBe(standard.lapses);
+    expect(four.lastReviewed).toBe(standard.lastReviewed);
   });
 });

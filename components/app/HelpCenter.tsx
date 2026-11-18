@@ -97,7 +97,7 @@ function Topic({ id }: { id: HelpTopic }) {
             <Grade tone="shaky" name="Shaky" body="You got through it, but hesitated or needed a prompt. It stays on its stage and comes back after the same gap." />
             <Grade tone="lost" name="Lost" body="You could not recite it. It goes back to the first stage and is due again tomorrow." />
           </ul>
-          <p className="mt-4"><strong>The stages:</strong> {REVIEW_INTERVALS_DAYS.map((d) => `${d} day${d === 1 ? "" : "s"}`).join(", then ")}. A portion is never removed from your trail, however solid it gets.</p>
+          <p className="mt-4"><strong>The standard stages:</strong> {REVIEW_INTERVALS_DAYS.map((d) => `${d} day${d === 1 ? "" : "s"}`).join(", then ")}. You can switch to a gentler or more intensive set, or write your own, under "Revision schedule". A portion is never removed from your trail, however solid it gets.</p>
           <p>Tapped the wrong one? Press <strong>Undo</strong> on the bar at the bottom of the screen.</p>
         </>
       );

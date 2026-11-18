@@ -1,4 +1,12 @@
-import type { DateOnly, Grade, TrackedPortion } from "./srs";
+import {
+  type DateOnly,
+  type Grade,
+  type ScheduleSetting,
+  type TrackedPortion,
+  DEFAULT_SCHEDULE,
+  ladderOf,
+  parseSchedule,
+} from "./srs";
 import type { GradeEvent, Recorder } from "./grading";
 import { applyAllGrades, mergeEvents } from "./grading";
 import type { Halaqah, Student, StudentTrail, Teacher } from "./halaqah";
@@ -38,6 +46,12 @@ export interface AppState {
   readonly trails: readonly StudentTrail[];
   /** Whose trail is "mine" when the app is being used alone. */
   readonly selfStudentId: string;
+  /** Which revision ladder is in use (gentle, standard, intensive or the
+   *  person's own). Changing it never touches a portion or its grades: the
+   *  ladder is applied when the trail is read, so switching back restores
+   *  exactly what was there. Kept on this device with the rest of the state;
+   *  it is not part of what syncs or is exported. */
+  readonly schedule: ScheduleSetting;
 }
 
 const KEY = "hifz-trail:v2";
@@ -60,6 +74,7 @@ export function emptyState(today: DateOnly): AppState {
       { studentId: SELF_ID, subjectId: newId(), boundAccount: null, portions: [], events: [] },
     ],
     selfStudentId: SELF_ID,
+    schedule: DEFAULT_SCHEDULE,
   };
 }
 
@@ -117,7 +132,12 @@ export function currentPortions(
   studentId: string
 ): TrackedPortion[] {
   const trail = trailOf(state.trails, studentId);
-  return applyAllGrades(trail.portions, trail.events);
+  return applyAllGrades(trail.portions, trail.events, ladderOf(state.schedule));
+}
+
+/** Choose a revision ladder. Only the setting changes; no portion or grade is rewritten. */
+export function setSchedule(state: AppState, schedule: ScheduleSetting): AppState {
+  return { ...state, schedule };
 }
 
 function putTrail(state: AppState, trail: StudentTrail): AppState {
@@ -491,5 +511,6 @@ function parseState(value: unknown): AppState | null {
     })),
     selfStudentId:
       typeof c.selfStudentId === "string" ? c.selfStudentId : SELF_ID,
+    schedule: parseSchedule(c.schedule),
   };
 }

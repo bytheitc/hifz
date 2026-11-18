@@ -11,6 +11,7 @@ import {
   recordGrade,
   removePortion,
   replacePortions,
+  setSchedule,
   takeInTrail,
   undoLastGrade,
 } from "./store";
@@ -477,5 +478,33 @@ describe("whose record a file is", () => {
     const outcome = takeInTrail(emptyState(TODAY), SELF, file(umarsPhone));
 
     expect(outcome.ok).toBe(false);
+  });
+});
+
+describe("the revision schedule", () => {
+  it("starts on the standard ladder", () => {
+    expect(emptyState(TODAY).schedule).toEqual({ preset: "standard" });
+  });
+
+  it("changes only the setting: no portion, grade or history is touched", () => {
+    let state = withPortion({ id: "p9" });
+    for (let i = 0; i < 5; i++) state = recordGrade(state, SELF, "p9", "solid", `2026-11-0${i + 1}`, self);
+
+    const shortened = setSchedule(state, { preset: "custom", days: [1, 3, 7, 16] });
+    expect(shortened.trails).toBe(state.trails);
+    expect(currentPortions(shortened, SELF)[0].box).toBe(3);
+
+    const back = setSchedule(shortened, { preset: "standard" });
+    expect(currentPortions(back, SELF)).toEqual(currentPortions(state, SELF));
+    expect(currentPortions(back, SELF)[0].box).toBe(5);
+    expect(back.trails[0].events).toHaveLength(5);
+  });
+
+  it("keeps a portion that was already further along than the new ladder", () => {
+    const state = setSchedule(withPortion({ id: "far", box: 5, lastReviewed: "2026-11-01", lapses: 1 }), { preset: "custom", days: [1, 3, 7, 16] });
+    const [p] = currentPortions(state, SELF);
+    expect(p.id).toBe("far");
+    expect(p.lapses).toBe(1);
+    expect(currentPortions(state, SELF)).toHaveLength(1);
   });
 });

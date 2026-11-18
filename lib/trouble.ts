@@ -1,10 +1,12 @@
 import { ayahsIn } from "./quran";
 import {
-  MAX_BOX,
   type DateOnly,
+  type Ladder,
   type TrackedPortion,
+  REVIEW_INTERVALS_DAYS,
   daysBetween,
   dueDate,
+  effectiveBox,
   isDue,
 } from "./srs";
 
@@ -38,7 +40,8 @@ import {
 
 /** Box at which a portion has survived long enough to count as recovered.
  *  Box 3 is a sixteen-day interval, which is the first gap long enough that
- *  surviving it is evidence rather than luck. */
+ *  surviving it is evidence rather than luck. On a ladder with fewer stages
+ *  the last stage counts instead, since it can never be climbed past. */
 export const SETTLED_BOX = 3;
 
 /** Below this, the struggle is not worth naming on the front page. One lapse
@@ -64,7 +67,7 @@ export interface TroubleSpot {
   readonly reasons: readonly string[];
 }
 
-export function troubleScore(portion: TrackedPortion, today: DateOnly): number {
+export function troubleScore(portion: TrackedPortion, today: DateOnly, ladder: Ladder = REVIEW_INTERVALS_DAYS): number {
   if (portion.lapses === 0) return 0;
 
   // Guard the denominator: a portion added today has been tracked for zero
@@ -74,7 +77,8 @@ export function troubleScore(portion: TrackedPortion, today: DateOnly): number {
   const rate = portion.lapses / months;
 
   // 0 when the portion is back at a one-day interval, 1 at the top box.
-  const recovery = Math.min(portion.box, MAX_BOX) / MAX_BOX;
+  const top = Math.max(1, ladder.length - 1);
+  const recovery = effectiveBox(portion, ladder) / top;
 
   // The rate is multiplied up because it is the signal that distinguishes an
   // active problem from an old one, and raw lapses alone drown it out.
@@ -88,7 +92,8 @@ function reasonsFor(
   portion: TrackedPortion,
   today: DateOnly,
   lapsesPerMonth: number,
-  recovered: boolean
+  recovered: boolean,
+  ladder: Ladder
 ): string[] {
   const reasons: string[] = [];
 
@@ -106,7 +111,7 @@ function reasonsFor(
     reasons.push("back at a one-day interval");
   }
 
-  const overdue = daysBetween(dueDate(portion), today);
+  const overdue = daysBetween(dueDate(portion, ladder), today);
   if (overdue > 0) {
     reasons.push(`${overdue} day${overdue === 1 ? "" : "s"} overdue`);
   }
@@ -120,21 +125,22 @@ function reasonsFor(
  */
 export function rankByTrouble(
   portions: readonly TrackedPortion[],
-  today: DateOnly
+  today: DateOnly,
+  ladder: Ladder = REVIEW_INTERVALS_DAYS
 ): TroubleSpot[] {
   return portions
     .filter((portion) => portion.lapses > 0)
     .map((portion) => {
       const months = Math.max(1, daysBetween(portion.addedOn, today) / 30);
       const lapsesPerMonth = portion.lapses / months;
-      const recovered = portion.box >= SETTLED_BOX;
+      const recovered = effectiveBox(portion, ladder) >= Math.min(SETTLED_BOX, ladder.length - 1);
       return {
         portion,
-        score: troubleScore(portion, today),
+        score: troubleScore(portion, today, ladder),
         lapsesPerMonth,
         recovered,
-        dueToday: isDue(portion, today),
-        reasons: reasonsFor(portion, today, lapsesPerMonth, recovered),
+        dueToday: isDue(portion, today, ladder),
+        reasons: reasonsFor(portion, today, lapsesPerMonth, recovered, ladder),
       };
     })
     .sort(
@@ -150,9 +156,10 @@ export function rankByTrouble(
 export function troubleSpots(
   portions: readonly TrackedPortion[],
   today: DateOnly,
-  limit = 3
+  limit = 3,
+  ladder: Ladder = REVIEW_INTERVALS_DAYS
 ): TroubleSpot[] {
-  return rankByTrouble(portions, today)
+  return rankByTrouble(portions, today, ladder)
     .filter((spot) => spot.score >= TROUBLE_THRESHOLD)
     .slice(0, limit);
 }
@@ -161,9 +168,10 @@ export function troubleSpots(
  *  thing and it had better be the right one. Null when nothing qualifies. */
 export function worstTroubleSpot(
   portions: readonly TrackedPortion[],
-  today: DateOnly
+  today: DateOnly,
+  ladder: Ladder = REVIEW_INTERVALS_DAYS
 ): TroubleSpot | null {
-  return troubleSpots(portions, today, 1)[0] ?? null;
+  return troubleSpots(portions, today, 1, ladder)[0] ?? null;
 }
 
 /** Ayahs carried by the portions currently in trouble - used by the coach to

@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   type TrackedPortion,
   MAX_BOX,
+  MAX_STAGES,
+  PRESETS,
   REVIEW_INTERVALS_DAYS,
+  checkLadder,
+  effectiveBox,
+  ladderOf,
+  parseLadder,
+  parseSchedule,
   addDays,
   daysBetween,
   dueDate,
@@ -157,5 +164,115 @@ describe("upcomingLoad and overdue work", () => {
     const overdue = portion({ id: "old", box: 0, lastReviewed: "2026-09-01" });
     const load = upcomingLoad([overdue], "2026-10-31", 5);
     expect(load.reduce((sum, day) => sum + day.portions, 0)).toBe(1);
+  });
+});
+
+describe("revision presets", () => {
+  it("keeps the standard preset identical to the original fixed table", () => {
+    expect(PRESETS.standard).toEqual([1, 3, 7, 16, 35, 90]);
+    expect(ladderOf({ preset: "standard" })).toEqual(REVIEW_INTERVALS_DAYS);
+  });
+
+  it("makes gentle longer and intensive shorter than standard at every stage", () => {
+    PRESETS.standard.forEach((days, i) => {
+      expect(PRESETS.gentle[i]).toBeGreaterThan(days);
+      expect(PRESETS.intensive[i]).toBeLessThanOrEqual(days);
+    });
+  });
+
+  it("gives every preset a strictly increasing, valid ladder", () => {
+    for (const ladder of Object.values(PRESETS)) expect(checkLadder(ladder)).toBeNull();
+  });
+
+  it("schedules the same grade differently on each preset", () => {
+    const p = portion({ box: 1, lastReviewed: "2026-10-01" });
+    expect(dueDate(p, PRESETS.gentle)).toBe("2026-10-06");
+    expect(dueDate(p, PRESETS.standard)).toBe("2026-10-04");
+    expect(dueDate(p, PRESETS.intensive)).toBe("2026-10-03");
+  });
+
+  it("reviews on the chosen ladder, climbing to its own last stage", () => {
+    const four = [1, 2, 5, 10];
+    let p = portion();
+    for (let i = 0; i < 10; i++) p = review(p, "solid", "2026-10-01", four);
+    expect(p.box).toBe(3);
+  });
+
+  it("shows load on the chosen ladder", () => {
+    const p = portion({ box: 0, lastReviewed: "2026-10-01" });
+    const standard = upcomingLoad([p], "2026-10-02", 3, PRESETS.standard);
+    const gentle = upcomingLoad([p], "2026-10-02", 3, PRESETS.gentle);
+    expect(standard[0].portions).toBe(1);
+    expect(gentle[0].portions).toBe(0);
+    expect(gentle[1].portions).toBe(1);
+  });
+});
+
+describe("a portion further along than the ladder it meets", () => {
+  const four = [1, 3, 7, 16];
+  const stage6 = portion({ box: 5, lastReviewed: "2026-10-01", lapses: 2 });
+
+  it("is treated as being at the last stage, not dropped or errored", () => {
+    expect(effectiveBox(stage6, four)).toBe(3);
+    expect(dueDate(stage6, four)).toBe("2026-10-17");
+    expect(isDue(stage6, "2026-10-16", four)).toBe(false);
+    expect(isDue(stage6, "2026-10-17", four)).toBe(true);
+  });
+
+  it("is not rewritten by merely being looked at", () => {
+    const before = { ...stage6 };
+    dueDate(stage6, four);
+    isDue(stage6, "2026-10-17", four);
+    expect(stage6).toEqual(before);
+  });
+
+  it("keeps its lapses and review date when graded on the shorter ladder", () => {
+    const solid = review(stage6, "solid", "2026-10-17", four);
+    expect(solid.box).toBe(3);
+    expect(solid.lapses).toBe(2);
+    expect(solid.lastReviewed).toBe("2026-10-17");
+    expect(review(stage6, "shaky", "2026-10-17", four).box).toBe(3);
+    expect(review(stage6, "lost", "2026-10-17", four).box).toBe(0);
+  });
+
+  it("goes back to its original due date when the longer ladder returns", () => {
+    expect(dueDate(stage6, REVIEW_INTERVALS_DAYS)).toBe("2026-12-30");
+  });
+
+  it("is never due earlier than its last review, even on a one-stage ladder", () => {
+    expect(dueDate(stage6, [5])).toBe("2026-10-06");
+  });
+});
+
+describe("parseLadder", () => {
+  it("reads commas, spaces or both", () => {
+    expect(parseLadder("1, 4, 10, 30")).toEqual({ ok: true, ladder: [1, 4, 10, 30] });
+    expect(parseLadder("1 4 10")).toEqual({ ok: true, ladder: [1, 4, 10] });
+    expect(parseLadder(" 2,5 ")).toEqual({ ok: true, ladder: [2, 5] });
+  });
+
+  it("refuses anything that would make a nonsense schedule", () => {
+    expect(parseLadder("")).toEqual({ ok: false, problem: "empty" });
+    expect(parseLadder("1, 0, 3")).toEqual({ ok: false, problem: "not-a-whole-number" });
+    expect(parseLadder("1, 2.5")).toEqual({ ok: false, problem: "not-a-whole-number" });
+    expect(parseLadder("1, x")).toEqual({ ok: false, problem: "not-a-whole-number" });
+    expect(parseLadder("1, 400")).toEqual({ ok: false, problem: "too-long" });
+    expect(parseLadder("5, 3")).toEqual({ ok: false, problem: "not-increasing" });
+    expect(parseLadder("3, 3")).toEqual({ ok: false, problem: "not-increasing" });
+    const eleven = Array.from({ length: MAX_STAGES + 1 }, (_, i) => i + 1).join(",");
+    expect(parseLadder(eleven)).toEqual({ ok: false, problem: "too-many" });
+  });
+});
+
+describe("parseSchedule", () => {
+  it("reads each preset and a valid custom ladder back", () => {
+    expect(parseSchedule({ preset: "gentle" })).toEqual({ preset: "gentle" });
+    expect(parseSchedule({ preset: "custom", days: [1, 5, 20] })).toEqual({ preset: "custom", days: [1, 5, 20] });
+  });
+
+  it("falls back to standard for anything unusable, rather than failing to load the trail", () => {
+    for (const bad of [undefined, null, 3, {}, { preset: "wild" }, { preset: "custom" }, { preset: "custom", days: [3, 1] }]) {
+      expect(parseSchedule(bad)).toEqual({ preset: "standard" });
+    }
   });
 });
