@@ -47,6 +47,10 @@ HifzTrail.use(async (_req: Request, _res: Response, next: NextFunction) => {
 // otherwise trip the limit partway through - which it did, and the symptom
 // was misleading: registration started returning 429, every token after that
 // was undefined, and a dozen unrelated assertions failed with 401.
+// Behind Vercel (or any proxy) the visitor's address is in X-Forwarded-For; without this every
+// visitor looks like the proxy and shares one rate limit.
+if (process.env.VERCEL === "1" || process.env.TRUST_PROXY === "on") HifzTrail.set("trust proxy", 1);
+
 if (config.app.environment !== "test") {
   HifzTrail.use(
     "/auth",
