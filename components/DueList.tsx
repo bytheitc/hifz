@@ -1,7 +1,7 @@
 "use client";
 
 import { describePortion, surah } from "@/lib/quran";
-import { type Grade, type TrackedPortion, daysBetween, dueDate } from "@/lib/srs";
+import { type Grade, type Ladder, type TrackedPortion, REVIEW_INTERVALS_DAYS, daysBetween, dueDate } from "@/lib/srs";
 import type { DateOnly } from "@/lib/srs";
 
 const GRADES: readonly { value: Grade; label: string; hint: string; colour: string }[] = [
@@ -27,7 +27,9 @@ export function DueList({
   troubleIds,
   teacherSaid,
   onGrade,
+  ladder = REVIEW_INTERVALS_DAYS,
 }: {
+  ladder?: Ladder;
   portions: readonly TrackedPortion[];
   today: DateOnly;
   troubleIds: ReadonlySet<string>;
@@ -39,7 +41,7 @@ export function DueList({
   return (
     <ul className="space-y-3">
       {portions.map((portion) => {
-        const overdue = daysBetween(dueDate(portion), today);
+        const overdue = daysBetween(dueDate(portion, ladder), today);
         const trouble = troubleIds.has(portion.id);
         const fromTeacher = teacherSaid.get(portion.id);
 

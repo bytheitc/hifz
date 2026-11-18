@@ -1,12 +1,14 @@
 "use client";
 
 import { describePortion } from "@/lib/quran";
-import { type TrackedPortion, dueDate } from "@/lib/srs";
+import { type Ladder, type TrackedPortion, REVIEW_INTERVALS_DAYS, dueDate, effectiveBox } from "@/lib/srs";
 
 export function TrailList({
   portions,
   onRemove,
+  ladder = REVIEW_INTERVALS_DAYS,
 }: {
+  ladder?: Ladder;
   portions: readonly TrackedPortion[];
   onRemove: (id: string) => void;
 }) {
@@ -24,7 +26,7 @@ export function TrailList({
           <span className="min-w-0 flex-1">
             <span className="block truncate font-semibold">{describePortion(portion)}</span>
             <span className="text-xs text-[var(--color-ink-faint)]">
-              Stage {portion.box + 1} · next {short(dueDate(portion))}
+              Stage {effectiveBox(portion, ladder) + 1} · next {short(dueDate(portion, ladder))}
             </span>
           </span>
           <button

@@ -1,5 +1,5 @@
 import { checkPortion } from "./quran";
-import { MAX_BOX, type DateOnly, type TrackedPortion } from "./srs";
+import { MAX_STAGES, type DateOnly, type TrackedPortion } from "./srs";
 import type { GradeEvent } from "./grading";
 
 /**
@@ -168,7 +168,7 @@ function isUsablePortion(value: unknown): value is TrackedPortion {
   // never be one the app would have refused to create.
   if (checkPortion(c.surah, c.fromAyah, c.toAyah) !== null) return false;
 
-  if (!Number.isInteger(c.box) || c.box < 0 || c.box > MAX_BOX) return false;
+  if (!Number.isInteger(c.box) || c.box < 0 || c.box >= MAX_STAGES) return false;
   if (!Number.isInteger(c.lapses) || c.lapses < 0) return false;
   if (!isDateOnly(c.addedOn)) return false;
   if (c.lastReviewed !== null && !isDateOnly(c.lastReviewed as string)) return false;

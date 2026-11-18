@@ -6,6 +6,7 @@ import {
   type Grade,
   type TrackedPortion,
   dueOn,
+  ladderOf,
   toDateOnly,
   upcomingLoad,
 } from "@/lib/srs";
@@ -29,6 +30,7 @@ import {
   removePortion,
   replacePortions,
   saveState,
+  setSchedule,
   takeInTrail,
   undoLastGrade,
 } from "@/lib/store";
@@ -39,6 +41,7 @@ import { ProgressCard } from "@/components/ProgressCard";
 import { WeekAhead } from "@/components/WeekAhead";
 import { AddPortionForm } from "@/components/AddPortionForm";
 import { TrailList } from "@/components/TrailList";
+import { SchedulePanel } from "@/components/SchedulePanel";
 import { BackupControls } from "@/components/BackupControls";
 import { StudentRoster } from "@/components/StudentRoster";
 import { TeacherNotes, type TeacherNote } from "@/components/TeacherNotes";
@@ -156,31 +159,32 @@ export default function Home() {
     () => (state && activeId ? currentPortions(state, activeId) : []),
     [state, activeId]
   );
+  const ladder = useMemo(() => ladderOf(state?.schedule ?? { preset: "standard" }), [state?.schedule]);
 
   const dueCounts = useMemo(() => {
     if (!state || !today) return {};
     const counts: Record<string, number> = {};
     for (const student of roster) {
-      counts[student.id] = dueOn(currentPortions(state, student.id), today).length;
+      counts[student.id] = dueOn(currentPortions(state, student.id), today, ladder).length;
     }
     return counts;
-  }, [state, roster, today]);
+  }, [state, roster, today, ladder]);
 
-  const due = useMemo(() => (today ? dueOn(portions, today) : []), [portions, today]);
+  const due = useMemo(() => (today ? dueOn(portions, today, ladder) : []), [portions, today, ladder]);
   const progress = useMemo(() => computeProgress(portions), [portions]);
   const load = useMemo(
-    () => (today ? upcomingLoad(portions, today, 7) : []),
-    [portions, today]
+    () => (today ? upcomingLoad(portions, today, 7, ladder) : []),
+    [portions, today, ladder]
   );
   const suggestions = useMemo(() => suggestNext(portions, 5), [portions]);
 
   const spots = useMemo(
-    () => (today ? troubleSpots(portions, today, 3) : []),
-    [portions, today]
+    () => (today ? troubleSpots(portions, today, 3, ladder) : []),
+    [portions, today, ladder]
   );
   const worstSpot = useMemo(
-    () => (today ? worstTroubleSpot(portions, today) : null),
-    [portions, today]
+    () => (today ? worstTroubleSpot(portions, today, ladder) : null),
+    [portions, today, ladder]
   );
   const troubleIds = useMemo(
     () => new Set(spots.map((spot) => spot.portion.id)),
@@ -504,7 +508,7 @@ export default function Home() {
                     )}
                   </div>
                 ) : (
-                  <DueList portions={due} today={today} troubleIds={troubleIds} teacherSaid={teacherSaid} onGrade={grade} />
+                  <DueList ladder={ladder} portions={due} today={today} troubleIds={troubleIds} teacherSaid={teacherSaid} onGrade={grade} />
                 )}
                 {due.length > 0 && (
                   <p className="mt-3 hidden text-center text-xs text-[var(--color-ink-faint)] sm:block">
@@ -567,6 +571,7 @@ export default function Home() {
                 {portions.length > 0 && (
                   <div className="mt-4">
                     <TrailList
+                      ladder={ladder}
                       portions={portions}
                       onRemove={(id) => setState((prev) => (prev && activeId ? removePortion(prev, activeId, id) : prev))}
                     />
@@ -587,6 +592,8 @@ export default function Home() {
                   </div>
                 )}
               </section>
+
+              <SchedulePanel schedule={state.schedule} onChange={(next) => setState((prev) => (prev ? setSchedule(prev, next) : prev))} />
 
               <section id="account" className="card scroll-mt-24 p-5">
                 <h2 className="font-extrabold">Keep it safe</h2>

@@ -1,4 +1,4 @@
-import { type DateOnly, type Grade, type TrackedPortion, review } from "./srs";
+import { type DateOnly, type Grade, type Ladder, type TrackedPortion, review } from "./srs";
 
 /**
  * Who said a portion was solid, shaky or lost — and the record of them
@@ -119,14 +119,15 @@ export function schedulingEvents(events: readonly GradeEvent[]): GradeEvent[] {
  */
 export function applyGrades(
   baseline: TrackedPortion,
-  events: readonly GradeEvent[]
+  events: readonly GradeEvent[],
+  ladder?: Ladder
 ): TrackedPortion {
   const mine = schedulingEvents(events).filter(
     (event) => event.portionId === baseline.id
   );
 
   return mine.reduce(
-    (portion, event) => review(portion, event.grade, event.on),
+    (portion, event) => review(portion, event.grade, event.on, ladder),
     baseline
   );
 }
@@ -134,9 +135,10 @@ export function applyGrades(
 /** Rebuild a whole trail. */
 export function applyAllGrades(
   portions: readonly TrackedPortion[],
-  events: readonly GradeEvent[]
+  events: readonly GradeEvent[],
+  ladder?: Ladder
 ): TrackedPortion[] {
-  return portions.map((portion) => applyGrades(portion, events));
+  return portions.map((portion) => applyGrades(portion, events, ladder));
 }
 
 /**
